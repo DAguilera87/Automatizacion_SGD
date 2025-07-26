@@ -60,18 +60,18 @@ for fila in filas:
     documentos.append(documento)
 print(f"✅ Documentos extraídos.")
 
-# Procesar cada documento: copiar archivo relacionado
+# Procesar cada documento: crear carpeta individual
 for doc in documentos:
-    nro_doc_original = doc["Nro Documento"]
-    nro_doc_original.strip()  # Eliminar espacios en blanco al inicio y al final
-    nro_doc = re.sub(r'[\w/:*?"<>|\\]', '-', doc["Nro Documento"])
-    carpeta_destino = os.path.join(carpeta_destino, nro_doc)
+    nro_doc_original = doc["Nro Documento"].strip()  # Eliminar espacios en blanco al inicio y al final
+    nro_doc = re.sub(r'[/:*?"<>|\\]', '_', nro_doc_original)
+
+    ruta_individual_carpeta = os.path.join(carpeta_destino, nro_doc)
 
     try:
-        os.makedirs(carpeta_destino, exist_ok=True)
-        print(f"📁 Carpeta creada: {carpeta_destino}")
+        os.makedirs(ruta_individual_carpeta, exist_ok=False)
+        print(f"📁 Carpeta creada: {ruta_individual_carpeta}")
     except Exception as e:
-        print(f"❌ Error al crear carpeta {carpeta_destino}: {e}")
+        print(f"❌ Error al crear carpeta {ruta_individual_carpeta}: {e}")
         continue
 
 # Crear DataFrame y exportar CSV
