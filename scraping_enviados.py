@@ -2,82 +2,83 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import os
 import shutil
+import sys
+import re
 
-# Ruta del archivo HTML local
-ruta = r"C:/Users/DEYKE/Desktop/Repositorio/respaldo_298/documentos/enviados.html"
 
-# Carpeta donde están los documentos referenciados
-carpeta_documentos = os.path.abspath(os.path.join(os.path.dirname(ruta), "..", "documentos"))
+# Ruta del archivo HTML fuente
+ruta_html = r"C:/Users/DEYKE/Desktop/Repositorio/respaldo_298/documentos/enviados.html"
+print("📄 Encontrado HTML base")
 
-# Carpeta de destino para las copias descargadas
-carpeta_salida = os.path.abspath(os.path.join(os.path.dirname(ruta), "Documentos_Descargados"))
-os.makedirs(carpeta_salida, exist_ok=True)
+# Ruta de la carpeta que contiene los documentos referenciados
+carpeta_documentos = os.path.abspath(os.path.join(os.path.dirname(ruta_html), "..", "documentos"))
+print(f"📁 Encontrado Carpeta: {carpeta_documentos}")
 
-# Parsear el HTML
-with open(ruta, encoding="utf-8") as f:
-    soup = BeautifulSoup(f, "html.parser")
+# Ruta raíz donde se crearán las carpetas
+carpeta_destino = "C:/Users/DEYKE/Desktop/Repositorio/respaldo_298/Doc. Enviados"
+os.makedirs(carpeta_destino, exist_ok=True)
+print(f"📂 Carpetas destino creadas: {carpeta_destino}")
 
-# Encuentra la tabla por ID
+# Leer y parsear el HTML
+with open(ruta_html, "r", encoding="utf-8") as f:
+    print("🔍 Cargando HTML...")
+    soup = BeautifulSoup(f, "html.parser")  # Analiza el HTML
+    print("✅ HTML cargado correctamente.")
+
+# Buscar la tabla de id: documentos
 tabla = soup.find("table", {"id": "tbl_documentos"})
+print("✅ Tabla encontrada.")
+if not tabla:
+    print("❌ No se encontró la tabla con ID 'tbl_documentos'.")
+    exit(1)
 
-# Lista para almacenar los datos
+# Extraer datos de la tabla
 documentos = []
+filas = tabla.find("tbody").find_all("tr")
+print(f"🔎 {len(filas)} filas encontradas.")
 
-# Extraer filas
-for fila in tabla.find("tbody").find_all("tr"):
-    columnas = fila.find_all("td")
-    if len(columnas) < 7:
+for fila in filas:
+    celdas = fila.find_all("td")
+    doc = {
+        "Nro Documento": celdas[0].get_text(strip=True)
+    }
+    if len(celdas) < 7:
         continue
-
-    # Extrae la información por columna
-    enlace = columnas[0].find("a")["href"].strip() if columnas[0].find("a") else ""
-    fecha = columnas[0].get_text(strip=True)
-    no_doc = columnas[1].get_text(strip=True)
-    remitente = columnas[2].get_text(strip=True)
-    destinatario = columnas[3].get_text(strip=True)
-    asunto = columnas[4].get_text(strip=True)
-    tipo_doc = columnas[5].get_text(strip=True)
-    firma_digital = columnas[6].get_text(strip=True)
-
-    documentos.append({
-        "Fecha": fecha,
+    
+# Asegurarse de que hay suficientes columnas
+    enlace = celdas[0].find("a")["href"].strip() if celdas[0].find("a") else ""
+    documento = {
+        "Fecha": celdas[0].get_text(strip=True),
         "Enlace": enlace,
-        "Nro Documento": no_doc,
-        "De": remitente,
-        "Para": destinatario,
-        "Asunto": asunto,
-        "Tipo Documento": tipo_doc,
-        "Firma Digital": firma_digital
-    })
+        "Nro Documento": celdas[1].get_text(strip=True),
+        "De": celdas[2].get_text(strip=True),
+        "Para": celdas[3].get_text(strip=True),
+        "Asunto": celdas[4].get_text(strip=True),
+        "Tipo Documento": celdas[5].get_text(strip=True),
+        "Firma Digital": celdas[6].get_text(strip=True)
+    }
+    documentos.append(documento)
+print(f"✅ Documentos extraídos.")
 
-# Procesar descargas
+# Procesar cada documento: copiar archivo relacionado
 for doc in documentos:
-    enlace = doc["Enlace"]
-    no_doc = doc["Nro Documento"]
+    nro_doc_original = doc["Nro Documento"]
+    nro_doc_original.strip()  # Eliminar espacios en blanco al inicio y al final
+    nro_doc = re.sub(r'[\w/:*?"<>|\\]', '-', doc["Nro Documento"])
+    carpeta_destino = os.path.join(carpeta_destino, nro_doc)
 
-    # Ruta absoluta del archivo de origen
-    origen = os.path.abspath(os.path.join(carpeta_documentos, os.path.basename(enlace)))
-
-    # Validación: existe el archivo?
-    if not os.path.exists(origen):
-        print(f"⚠️ Archivo no encontrado: {origen}")
+    try:
+        os.makedirs(carpeta_destino, exist_ok=True)
+        print(f"📁 Carpeta creada: {carpeta_destino}")
+    except Exception as e:
+        print(f"❌ Error al crear carpeta {carpeta_destino}: {e}")
         continue
 
-    # Determinar extensión y destino
-    extension = os.path.splitext(origen)[1]
-    destino = os.path.join(carpeta_salida, f"{no_doc}{extension}")
-
-    # Copiar
-    shutil.copy2(origen, destino)
-    print(f"✅ {no_doc} -> {destino}")
-
-print("\n🟢 Proceso finalizado.")
-
-# Convertir a DataFrame
+# Crear DataFrame y exportar CSV
 df = pd.DataFrame(documentos)
 
 # abrir cada HTML del enlace y sacar más info
-base_dir = os.path.dirname(ruta)
+base_dir = os.path.dirname(ruta_html)
 for enlace in df["Enlace"]:
     ruta_completa = os.path.abspath(os.path.join(base_dir, enlace))
     print(f"Abrir archivo: {ruta_completa}")
@@ -85,7 +86,25 @@ for enlace in df["Enlace"]:
         soup = BeautifulSoup(f, "html.parser")
         # Extraer más información según sea necesario
 
-
 # Mostrar o guardar
 print(df.head())
 df.to_csv("documentos_extraidos.csv", index=False, encoding="utf-8-sig")
+print("\n📁 CSV generado: documentos_extraidos.csv")
+
+# Extra opcional: abrir cada HTML y extraer más info si se requiere
+for i, row in df.iterrows():
+    enlace = row["Enlace"]
+    if not enlace:
+        continue
+    ruta_completa = os.path.join(carpeta_documentos, os.path.basename(enlace))
+    if not os.path.exists(ruta_completa):
+        continue
+
+    with open(ruta_completa, encoding="utf-8") as f:
+        html_individual = BeautifulSoup(f, "html.parser")
+        # Aquí podrías extraer más info si deseas, por ejemplo:
+        # detalle = html_individual.find("div", {"id": "detalle_documento"})
+        # df.loc[i, "Detalle"] = detalle.get_text(strip=True) if detalle else ""
+
+print("\n🟢 Proceso completado con éxito.")
+# Fin del script
