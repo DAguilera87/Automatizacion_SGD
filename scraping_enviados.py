@@ -2,48 +2,42 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import os
 import shutil
-import sys
 import re
 
 # Crear carpeta con prefijo numérico
 def crear_carpeta_con_prefijo(base_path, nombre_base, contador):
-    nombre_final = f"{str(contador).zfill(2)}_{nombre_base}"
-    carpeta_destino = os.path.join(base_path, nombre_final)
-
-    while os.path.exists(carpeta_destino):
-        contador += 1
+    while True:
         nombre_final = f"{str(contador).zfill(2)}_{nombre_base}"
         carpeta_destino = os.path.join(base_path, nombre_final)
+        if not os.path.exists(carpeta_destino):
+            os.makedirs(carpeta_destino, exist_ok=True)
+            return carpeta_destino
+        contador += 1
 
-    os.makedirs(carpeta_destino, exist_ok=True)
-    return carpeta_destino
-contador_global = 1  # Puedes iniciar desde 1
-
-# Ruta del archivo HTML fuente
-ruta_html = r"C:/Users/DEYKE/Desktop/Repositorio/respaldo_298/documentos/enviados.html"
-print("📄 Encontrado HTML base")
-
-# Ruta de la carpeta que contiene los documentos referenciados
+# Configuración inicial
+contador_global = 1
+ruta_html = r"C:/Users/DEYKE/Desktop/Repositorio/respaldo_298/documentos/enviados.html" # Ruta del archivo HTML fuente
 carpeta_documentos = os.path.abspath(os.path.join(os.path.dirname(ruta_html), "..", "documentos"))
-print(f"📁 Encontrado Carpeta: {carpeta_documentos}")
+carpeta_destino = r"C:/Users/DEYKE/Desktop/Repositorio/respaldo_298/Doc. Enviados"
 
-# Ruta raíz donde se crearán las carpetas
-carpeta_destino = "C:/Users/DEYKE/Desktop/Repositorio/respaldo_298/Doc. Enviados"
+# Preparar entorno
 os.makedirs(carpeta_destino, exist_ok=True)
-print(f"📂 Carpetas destino creadas: {carpeta_destino}")
+print(f"📄 HTML base: {ruta_html}")
+print(f"📁 Carpeta de documentos: {carpeta_documentos}")
+print(f"📂 Carpetas destino: {carpeta_destino}")
 
 # Leer y parsear el HTML
 with open(ruta_html, "r", encoding="utf-8") as f:
     print("🔍 Cargando HTML...")
-    soup = BeautifulSoup(f, "html.parser")  # Analiza el HTML
+    soup = BeautifulSoup(f, "html.parser")
     print("✅ HTML cargado correctamente.")
 
-# Buscar la tabla de id: documentos
+# Buscar tabla con id: documentos
 tabla = soup.find("table", {"id": "tbl_documentos"})
-print("✅ Tabla encontrada.")
 if not tabla:
     print("❌ No se encontró la tabla con ID 'tbl_documentos'.")
     exit(1)
+print("✅ Tabla encontrada.")
 
 # Extraer datos de la tabla
 documentos = []
@@ -59,10 +53,10 @@ for fila in filas:
         continue
     
 # Asegurarse de que hay suficientes columnas
-    enlace = celdas[0].find("a")["href"].strip() if celdas[0].find("a") else ""
+    enlace_tag = celdas[0].find("a")["href"].strip() if celdas[0].find("a") else ""
     documento = {
         "Fecha": celdas[0].get_text(strip=True),
-        "Enlace": enlace,
+        "Enlace": enlace_tag, # Enlace al documento sin documentos. Pendiente
         "Nro Documento": celdas[1].get_text(strip=True),
         "De": celdas[2].get_text(strip=True),
         "Para": celdas[3].get_text(strip=True),
@@ -73,8 +67,7 @@ for fila in filas:
     documentos.append(documento)
 print(f"✅ Documentos extraídos.")
 
-
-# Procesar cada documento: crear carpeta individual
+# Crear carpeta individual
 for doc in documentos:
     nro_doc_original = doc["Nro Documento"].strip()
     nro_doc = re.sub(r'[/:*?"<>|\\]', '_', nro_doc_original)
@@ -86,30 +79,27 @@ for doc in documentos:
         print(f"❌ Error al crear carpeta para {nro_doc}: {e}")
         continue
 
-# Crear DataFrame y exportar CSV
+# Crear DataFrame y guardar CSV
 df = pd.DataFrame(documentos)
-
-# abrir cada HTML del enlace y sacar más info
-base_dir = os.path.dirname(ruta_html)
-for enlace in df["Enlace"]:
-    ruta_completa = os.path.abspath(os.path.join(base_dir, enlace))
-    print(f"Abrir archivo: {ruta_completa}")
-    with open(ruta_completa, encoding="utf-8") as f:
-        soup = BeautifulSoup(f, "html.parser")
-        # Extraer más información según sea necesario
-
-# Mostrar o guardar
-print(df.head())
 df.to_csv("documentos_extraidos.csv", index=False, encoding="utf-8-sig")
 print("\n📁 CSV generado: documentos_extraidos.csv")
+print(df.head())
+
+# Abrir HTMLs enlazados y procesar
+for i, row in df.iterrows():
+    enlace = row["Enlace"]
+    if not enlace:
+        continue
 
 # Extra opcional: abrir cada HTML y extraer más info si se requiere
 for i, row in df.iterrows():
     enlace = row["Enlace"]
     if not enlace:
         continue
+    
     ruta_completa = os.path.join(carpeta_documentos, os.path.basename(enlace))
     if not os.path.exists(ruta_completa):
+        print(f"❌ Archivo no encontrado: {ruta_completa}")
         continue
 
     with open(ruta_completa, encoding="utf-8") as f:
