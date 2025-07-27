@@ -74,7 +74,7 @@ for doc in documentos:
 
     try:
         ruta_individual_carpeta = crear_carpeta_con_prefijo(carpeta_destino, nro_doc, contador_global)
-        print(f"📁 Carpeta creada: {ruta_individual_carpeta}")
+        print(f"📁 Carpetas creadas: {len(os.listdir(carpeta_destino))}")
     except Exception as e:
         print(f"❌ Error al crear carpeta para {nro_doc}: {e}")
         continue
@@ -83,7 +83,7 @@ for doc in documentos:
 df = pd.DataFrame(documentos)
 csv_path = os.path.join(carpeta_destino, "documentos_extraidos.csv")
 df.to_csv(csv_path, index=False, encoding="utf-8-sig")
-print(f"\n📁 CSV generado: {csv_path}")
+print(f"\n📁 CSV generado")
 print(df.head())
 
 # Abrir HTMLs enlazados y procesar
