@@ -68,18 +68,6 @@ for fila in filas:
     documentos.append(documento)
 print(f"✅ Documentos extraídos.")
 
-# Crear carpeta individual
-for doc in documentos:
-    nro_doc_original = doc["Nro Documento"].strip()
-    nro_doc = re.sub(r'[/:*?"<>|\\]', '_', nro_doc_original)
-
-    try:
-        ruta_individual_carpeta = crear_carpeta_con_prefijo(carpeta_destino, nro_doc, contador_global)
-        print(f"📁 Carpetas creadas: {len(os.listdir(carpeta_destino))}")
-    except Exception as e:
-        print(f"❌ Error al crear carpeta para {nro_doc}: {e}")
-        continue
-
 # Crear DataFrame y guardar CSV
 df = pd.DataFrame(documentos)
 csv_path = os.path.join(carpeta_destino, "documentos_extraidos.csv")
@@ -87,28 +75,45 @@ df.to_csv(csv_path, index=False, encoding="utf-8-sig")
 print(f"\n📁 CSV generado")
 print(df.head())
 
-# Abrir HTMLs enlazados y procesar
+# Abrir HTMLs secundarios enlazados y procesar
 for i, row in df.iterrows():
     enlace = row["Enlace"]
+    nro_doc_original = row["Nro Documento"].strip()
+    nro_doc = re.sub(r'[/:*?"<>|\\]', '_', nro_doc_original)
+
     if not enlace:
         continue
 
-# Extra opcional: abrir cada HTML y extraer más info si se requiere
-for i, row in df.iterrows():
-    enlace = row["Enlace"]
-    if not enlace:
-        continue
-    
-    ruta_completa = os.path.join(carpeta_documentos, os.path.basename(enlace))
-    if not os.path.exists(ruta_completa):
-        print(f"❌ Archivo no encontrado: {ruta_completa}")
+    ruta_html_secundario = os.path.join(carpeta_documentos, os.path.basename(enlace))
+    if not os.path.exists(ruta_html_secundario):
+        print(f"❌ Archivo no encontrado: {ruta_html_secundario}")
         continue
 
-    with open(ruta_completa, encoding="utf-8") as f:
+    with open(ruta_html_secundario, encoding="utf-8") as f:
         html_individual = BeautifulSoup(f, "html.parser")
-        # Aquí podrías extraer más info si deseas, por ejemplo:
-        # detalle = html_individual.find("div", {"id": "detalle_documento"})
-        # df.loc[i, "Detalle"] = detalle.get_text(strip=True) if detalle else ""
+        div_datos = html_individual.find("div", {"id": "div_datos1"})
+        if not div_datos:
+            print(f"⚠️ No se encontró el div con id='div_datos1' en {ruta_html_secundario}")
+            continue
 
-print("\n🟢 Proceso completado con éxito.")
+        enlace_pdf_tag = div_datos.find("a", href=True)
+        if not enlace_pdf_tag:
+            print(f"⚠️ No se encontró enlace PDF en {ruta_html_secundario}")
+            continue
+
+        href_pdf = enlace_pdf_tag["href"]
+        ruta_pdf = os.path.normpath(os.path.join(os.path.dirname(ruta_html_secundario), href_pdf))
+        if not os.path.exists(ruta_pdf):
+            print(f"❌ PDF no encontrado: {ruta_pdf}")
+            continue
+
+        try:
+            ruta_individual_carpeta = crear_carpeta_con_prefijo(carpeta_destino, nro_doc, contador_global)
+            shutil.copy(ruta_pdf, os.path.join(ruta_individual_carpeta, os.path.basename(ruta_pdf)))
+            print(f"📥 PDF copiado a {ruta_individual_carpeta}")
+        except Exception as e:
+            print(f"❌ Error al copiar PDF para {nro_doc}: {e}")
+print(f"📬 Elementos creados: {len(os.listdir(carpeta_destino))}")
+
+print("\n🎯 Proceso completado con éxito.")
 # Fin del script
