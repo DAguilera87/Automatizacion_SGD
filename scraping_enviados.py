@@ -81,8 +81,9 @@ for doc in documentos:
 
 # Crear DataFrame y guardar CSV
 df = pd.DataFrame(documentos)
-df.to_csv("documentos_extraidos.csv", index=False, encoding="utf-8-sig")
-print("\n📁 CSV generado: documentos_extraidos.csv")
+csv_path = os.path.join(carpeta_destino, "documentos_extraidos.csv")
+df.to_csv(csv_path, index=False, encoding="utf-8-sig")
+print(f"\n📁 CSV generado: {csv_path}")
 print(df.head())
 
 # Abrir HTMLs enlazados y procesar
