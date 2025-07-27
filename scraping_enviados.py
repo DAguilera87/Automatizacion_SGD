@@ -113,7 +113,8 @@ for i, row in df.iterrows():
             print(f"📥 PDF copiado a {ruta_individual_carpeta}")
         except Exception as e:
             print(f"❌ Error al copiar PDF para {nro_doc}: {e}")
-print(f"📬 Elementos creados: {len(os.listdir(carpeta_destino))}")
+            
+print(f"📬 Elementos creados: {len(os.listdir(carpeta_destino))} de {len(filas)} filas encontradas en la tabla con id: documentos (Memorandos Enviados_SGD).")
 
 print("\n🎯 Proceso completado con éxito.")
 # Fin del script
