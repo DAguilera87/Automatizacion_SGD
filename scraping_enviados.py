@@ -6,6 +6,8 @@ import re
 from pathlib import Path
 from pandas import ExcelWriter
 from datetime import datetime
+from tqdm import tqdm
+
 
 
 # Crear carpeta con prefijo numérico
@@ -75,7 +77,7 @@ print("📊 DataFrame creado con los documentos.")
 
 # Abrir HTMLs secundarios enlazados y procesar
 print (f"⏳ Procesando fila")
-for i, row in df.iterrows():
+for i, row in tqdm(df.iterrows(), total=len(df), desc="📦 Procesando documentos", ncols=100):
     enlace = row["Enlace"]
     nro_doc_original = row["Nro Documento"].strip()
     nro_doc = re.sub(r'[/:*?"<>|\\]', '_', nro_doc_original)
@@ -137,7 +139,7 @@ if len(df) != len(logs_por_fila):
     print("⚠️ Advertencia: la cantidad de logs no coincide con la cantidad de documentos.")
 
 # Generar nombre de archivo Excel con timestamp
-timestamp = datetime.now().strftime("%Y%m%d")
+timestamp = datetime.now().strftime("%Y-%m-%d")
 
 # Guardar DataFrame de logs actualizado en Excel junto con los documentos
 excel_path = os.path.join(carpeta_destino, f"doc._enviados_extraidos_{timestamp}.xlsx")
