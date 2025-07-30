@@ -5,6 +5,7 @@ import shutil
 import re
 from pathlib import Path
 from pandas import ExcelWriter
+from datetime import datetime
 
 
 # Crear carpeta con prefijo numérico
@@ -132,10 +133,17 @@ for i, row in df.iterrows():
 # Añadir la columna de log al DataFrame
 df["Logs"] = logs_por_fila
 
+if len(df) != len(logs_por_fila):
+    print("⚠️ Advertencia: la cantidad de logs no coincide con la cantidad de documentos.")
+
+# Generar nombre de archivo Excel con timestamp
+timestamp = datetime.now().strftime("%Y%m%d")
+
 # Guardar DataFrame de logs actualizado en Excel junto con los documentos
-excel_path = os.path.join(carpeta_destino, "documentos_enviados_extraidos.xlsx")
+excel_path = os.path.join(carpeta_destino, f"doc._enviados_extraidos_{timestamp}.xlsx")
 with ExcelWriter(excel_path, engine="xlsxwriter", engine_kwargs={"options": {"strings_to_urls": False}}) as writer:
     df.to_excel(writer, index=False, sheet_name="Documentos_Enviados")
+
 
 print(f"💾 Archivo Excel generado con datos y logs integrados.")
 print(f"📬 Elementos creados: {len(os.listdir(carpeta_destino))} de {len(filas)} filas encontradas en la tabla.")
