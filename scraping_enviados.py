@@ -19,14 +19,13 @@ def crear_carpeta_con_prefijo(base_path, nombre_base, contador):
             return carpeta_destino
         contador += 1
 
-
 # Configuración inicial
 contador_global = 1
 # Ruta del archivo HTML fuente
-ruta_html = r"C:/Users/deiker.aguilera/Desktop/WorkSpace/Script_SGD/302_Respaldo_SGD_Deiker_Prueba/documentos/enviados.html"
+ruta_html = r"C:/Users/DEYKE/Desktop/Repositorio/298_Respaldo_SGD_Clara_Analista/documentos/enviados.html"
 carpeta_documentos = os.path.abspath(os.path.join(
     os.path.dirname(ruta_html), "..", "documentos"))
-carpeta_destino = r"C:/Users/deiker.aguilera/Desktop/WorkSpace/Script_SGD/302_Respaldo_SGD_Deiker_Prueba/Doc. Enviados"
+carpeta_destino = r"C:\Users\DEYKE\Desktop\Repositorio\298_Respaldo_SGD_Clara_Analista\Doc. Enviados"
 
 # Preparar entorno
 os.makedirs(carpeta_destino, exist_ok=True)
@@ -72,7 +71,6 @@ for fila in filas:
     }
     documentos.append(documento)
 print(f"✅ Documentos extraídos.")
-
 # Crear DataFrame y guardar logs
 df = pd.DataFrame(documentos)
 logs_por_fila = []
@@ -84,7 +82,7 @@ for i, row in tqdm(df.iterrows(), total=len(df), desc="📦 Procesando documento
     enlace = row["Enlace"]
     nro_doc_original = row["Nro Documento"].strip()
     nro_doc = re.sub(r'[/:*?"<>|\\]', '_', nro_doc_original)
-    log_msg = ""
+    log_msg = "⚠️ Sin log generado"
 
     if not enlace:
         log_msg = "❌ Sin enlace al HTML secundario"
@@ -93,33 +91,32 @@ for i, row in tqdm(df.iterrows(), total=len(df), desc="📦 Procesando documento
         continue
 
 # Verificar existencia del archivo HTML secundario
-    ruta_html_secundario = os.path.join(
-        carpeta_documentos, os.path.basename(enlace))
+    ruta_html_secundario = os.path.join(carpeta_documentos, os.path.basename(enlace))
     if not os.path.exists(ruta_html_secundario):
         log_msg = f"❌ Archivo HTML no encontrado"
         logs_por_fila.append(log_msg)
         print(log_msg)
         continue
+    
+    # Abrir HTML secundario
+    try:
+        with open(ruta_html_secundario, encoding="utf-8") as f:
+            html_individual = BeautifulSoup(f, "html.parser")
+            div_datos = html_individual.find("div", {"id": "div_datos1"})
+            if not div_datos:
+                log_msg = f"⚠️ Div 'div_datos1' no encontrado"
+                logs_por_fila.append(log_msg)
+                print(log_msg)
+                continue
 
-# Abrir HTML secundario
-
-    with open(ruta_html_secundario, encoding="utf-8") as f:
-        html_individual = BeautifulSoup(f, "html.parser")
-        div_datos = html_individual.find("div", {"id": "div_datos1"})
-        if not div_datos:
-            log_msg = f"⚠️ Div 'div_datos1' no encontrado"
-            logs_por_fila.append(log_msg)
-            print(log_msg)
-            continue
-
-# Extraer enlace al PDF
+        # Extraer enlace al PDF
         enlace_pdf_tag = div_datos.find("a", href=True)
         if not enlace_pdf_tag:
             log_msg = f"⚠️ Enlace PDF no encontrado"
             logs_por_fila.append(log_msg)
             continue
 
-# Verificar existencia del PDF
+        # Verificar existencia del PDF
         href_pdf = enlace_pdf_tag["href"]
         ruta_pdf = os.path.normpath(os.path.join(
             os.path.dirname(ruta_html_secundario), href_pdf))
@@ -127,8 +124,8 @@ for i, row in tqdm(df.iterrows(), total=len(df), desc="📦 Procesando documento
             log_msg = f"❌ PDF no encontrado"
             logs_por_fila.append(log_msg)
             continue
-# Crear carpeta destino con número correlativo
-    try:
+
+        # Crear carpeta destino con número correlativo
         ruta_individual_carpeta = crear_carpeta_con_prefijo(
             carpeta_destino, nro_doc, contador_global
         )
@@ -137,7 +134,6 @@ for i, row in tqdm(df.iterrows(), total=len(df), desc="📦 Procesando documento
         tabla_info = div_datos.find("table")
         filas_info = tabla_info.find_all("tr")
         nombre_pdf_deseado = None
-
         for tr in filas_info:
             columnas = tr.find_all("td")
             if len(columnas) < 2:
@@ -145,23 +141,19 @@ for i, row in tqdm(df.iterrows(), total=len(df), desc="📦 Procesando documento
             campo = columnas[0].get_text(strip=True)
             valor = columnas[1].get_text(strip=True)
             if "No. de Documento" in campo:
-                nombre_pdf_deseado = valor.replace(
-                    " ", "").strip()  # elimina espacios
+                nombre_pdf_deseado = valor.replace(" ", "").strip()  # elimina espacios
                 break
 
         # Si no se encontró el nombre, usar nombre original del PDF
         if not nombre_pdf_deseado:
-            nombre_pdf_deseado = os.path.splitext(
-                os.path.basename(ruta_pdf))[0]
+            nombre_pdf_deseado = os.path.splitext(os.path.basename(ruta_pdf))[0]
 
         # Crear nombre final con extensión .pdf
         nuevo_nombre_pdf = f"{nombre_pdf_deseado}.pdf"
-        ruta_pdf_destino = os.path.join(
-            ruta_individual_carpeta, nuevo_nombre_pdf)
-
+        ruta_pdf_destino = os.path.join(ruta_individual_carpeta, nuevo_nombre_pdf)
         # Copiar y renombrar el PDF
         shutil.copy(ruta_pdf, ruta_pdf_destino)
-        log_msg = f"📥 PDF copiado"
+        log_msg = f"📥 PDF copiado exitosamente"
 
     except Exception as e:
         log_msg = f"❌ Error al copiar PDF {e}"
@@ -169,9 +161,10 @@ for i, row in tqdm(df.iterrows(), total=len(df), desc="📦 Procesando documento
     logs_por_fila.append(log_msg)
 
     # Verificar que los logs coincidan con el DataFrame
-    if len(df) != len(logs_por_fila):
-        print(
-            "⚠️ Advertencia: la cantidad de logs no coincide con la cantidad de documentos.")
+if len(df) != len(logs_por_fila):
+    print("⚠️ Advertencia: la cantidad de logs no coincide con la cantidad de documentos.")
+else:
+    print("✅ Todos los logs coinciden con los documentos.")
 
 # Añadir la columna de log al DataFrame
 df["Logs"] = logs_por_fila
