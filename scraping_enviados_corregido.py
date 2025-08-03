@@ -1,4 +1,3 @@
-
 from bs4 import BeautifulSoup
 import pandas as pd
 import os
@@ -75,7 +74,6 @@ print(f"✅ Documentos extraídos.")
 
 df = pd.DataFrame(documentos)
 logs_por_fila = []
-
 print("📊 DataFrame creado con los documentos.")
 
 for i, row in tqdm(df.iterrows(), total=len(df), desc="📦 Procesando documentos", ncols=100):
@@ -122,6 +120,51 @@ for i, row in tqdm(df.iterrows(), total=len(df), desc="📦 Procesando documento
             carpeta_destino, nro_doc, contador_global
         )
 
+        # Copiar anexos en div_datos2 a la carpeta individual
+        div_datos2 = html_individual.find("div", {"id": "div_datos2"})
+        if div_datos2:
+            bloques_anexos = div_datos2.find_all("table", {"border": "1"})
+            for idx, bloque in enumerate(bloques_anexos):
+                siguiente_tabla = bloque.find_next_sibling("table")
+                if not siguiente_tabla:
+                    continue
+
+                filas = siguiente_tabla.find_all("tr")
+                nombre_archivo = None
+                enlace_pdf = None
+
+                for fila in filas:
+                    columnas = fila.find_all("td")
+                    if len(columnas) < 2:
+                        continue
+
+                    campo = columnas[0].get_text(strip=True).lower()
+                    valor = columnas[1].get_text(strip=True).replace("\xa0", " ").strip()
+
+                    if "nombre:" in campo:
+                        nombre_archivo = valor
+                    elif "archivo:" in campo:
+                        enlace_tag = columnas[1].find("a", href=True)
+                        if enlace_tag:
+                            enlace_pdf = enlace_tag["href"]
+
+                if enlace_pdf and nombre_archivo:
+                    ruta_adicional = os.path.normpath(os.path.join(os.path.dirname(ruta_html_secundario), enlace_pdf))
+                    if os.path.exists(ruta_adicional):
+                        extension = os.path.splitext(ruta_adicional)[1]
+                        nombre_limpio = re.sub(r'[/:*?"<>|\\]', '_', nombre_archivo)
+                        nombre_final = f"Anexo{idx+1}_{nombre_limpio}"
+                        destino_adicional = os.path.join(ruta_individual_carpeta, nombre_final)
+                        try:
+                            shutil.copy(ruta_adicional, destino_adicional)
+                            log_msg += f" | 📎 Anexo {idx+1} copiado como {nombre_final}"
+                        except Exception as e:
+                            log_msg += f" | ⚠️ Error al copiar anexo {idx+1}: {e}"
+                    else:
+                        log_msg += f" | ⚠️ Anexo {idx+1} no encontrado"
+                
+
+        # Extraer información de la tabla dentro de div_datos
         tabla_info = div_datos.find("table")
         filas_info = tabla_info.find_all("tr") if tabla_info else []
         nombre_pdf_deseado = None
@@ -156,10 +199,10 @@ for i, row in tqdm(df.iterrows(), total=len(df), desc="📦 Procesando documento
         nuevo_nombre_pdf = f"{nombre_pdf_deseado}.pdf"
         ruta_pdf_destino = os.path.join(ruta_individual_carpeta, nuevo_nombre_pdf)
         shutil.copy(ruta_pdf, ruta_pdf_destino)
-        log_msg = f"📥 PDF copiado exitosamente"
+        log_msg = f"📥 PDF Principal descargado exitosamente"
 
     except Exception as e:
-        log_msg = f"❌ Error al copiar PDF {e}"
+        log_msg = f"❌ Error al descargar PDF principal {e}"
 
     logs_por_fila.append(log_msg)
 
@@ -170,6 +213,8 @@ else:
 
 df["Logs"] = logs_por_fila
 
+print (f"📄 PDFs principales descargados")
+print (f"📎 PDFs anexos descargados")
 timestamp = datetime.now().strftime("%Y-%m-%d")
 excel_path = os.path.join(
     carpeta_destino, f"doc._enviados_extraidos_{timestamp}.xlsx")
@@ -177,5 +222,5 @@ with ExcelWriter(excel_path, engine="xlsxwriter", engine_kwargs={"options": {"st
     df.to_excel(writer, index=False, sheet_name="Doc._Enviados")
 
 print(f"💾 Archivo Excel generado con datos y logs integrados.")
-print(f"📬 Elementos creados: {len(os.listdir(carpeta_destino))} de {len(filas)} filas encontradas en la tabla.")
+print(f"📬 Elementos creados: {len(os.listdir(carpeta_destino))} de {len(filas := tabla.find('tbody').find_all('tr'))} filas encontradas en la tabla.")
 print("🎯 Proceso completado con éxito.")
