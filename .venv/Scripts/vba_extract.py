@@ -1,4 +1,4 @@
-#!C:\Users\DEYKE\Desktop\Repositorio\Automatizacion_SGD\.venv\Scripts\python.exe
+#!C:\Users\deiker.aguilera\Desktop\WorkSpace\Script_SGD\Automatizacion_SGD\.venv\Scripts\python.exe
 
 ##############################################################################
 #

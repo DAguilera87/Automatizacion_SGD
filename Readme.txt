@@ -2,8 +2,13 @@
 # Dependencias para el script de extracción de documentos SGD
 # Generado para Python 3.8+
 
+##############################################
 # Crear el entorno virtual
 python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+##############################################
+
 
 # Activar el entorno virtual
 # En Windows:
