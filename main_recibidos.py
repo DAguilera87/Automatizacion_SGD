@@ -19,14 +19,15 @@ def crear_carpeta_con_prefijo(base_path, nombre_base, contador):
             return carpeta_destino
         contador += 1
 
+
 # Configuración inicial
 contador_global = 1
 
 # Ruta del archivo HTML fuente
-ruta_html = r"C:/Users/DEYKE/Desktop/Repositorio/298_Respaldo_SGD_Clara_Analista/documentos/recibidos.html"
+ruta_html = r"C:\Users\deiker.aguilera\Desktop\WorkSpace\Script_SGD\298_Respaldo SGD_Clara Ordoñez_Analista\documentos\enviados.html"
 carpeta_documentos = os.path.abspath(os.path.join(
     os.path.dirname(ruta_html), "..", "documentos"))
-carpeta_destino = r"C:/Users/DEYKE/Desktop/Repositorio/298_Respaldo_SGD_Clara_Analista/Doc. Recibidos"
+carpeta_destino = r"c:\Users\deiker.aguilera\Desktop\WorkSpace\Script_SGD\298_Respaldo SGD_Clara Ordoñez_Analista\Doc. Enviados"
 
 # Preparar entorno
 os.makedirs(carpeta_destino, exist_ok=True)
@@ -57,7 +58,8 @@ for fila in filas:
     if len(celdas) < 7:
         continue
 
-    enlace_tag = celdas[0].find("a")["href"].strip() if celdas[0].find("a") else ""
+    enlace_tag = celdas[0].find(
+        "a")["href"].strip() if celdas[0].find("a") else ""
     documento = {
         "Fecha": celdas[0].get_text(strip=True),
         "Enlace": enlace_tag,
@@ -93,7 +95,8 @@ for i, row in tqdm(df.iterrows(), total=len(df), desc="📦 Procesando documento
         df.at[i, "Anexos"] = anexos_descargados
         continue
 
-    ruta_html_secundario = os.path.join(carpeta_documentos, os.path.basename(enlace))
+    ruta_html_secundario = os.path.join(
+        carpeta_documentos, os.path.basename(enlace))
     if not os.path.exists(ruta_html_secundario):
         log_msg = f"❌ Archivo HTML no encontrado"
         logs_por_fila.append(log_msg)
@@ -149,7 +152,8 @@ for i, row in tqdm(df.iterrows(), total=len(df), desc="📦 Procesando documento
                         continue
 
                     campo = columnas[0].get_text(strip=True).lower()
-                    valor = columnas[1].get_text(strip=True).replace("\xa0", " ").strip()
+                    valor = columnas[1].get_text(
+                        strip=True).replace("\xa0", " ").strip()
 
                     if "nombre:" in campo:
                         nombre_archivo = valor
@@ -159,12 +163,15 @@ for i, row in tqdm(df.iterrows(), total=len(df), desc="📦 Procesando documento
                             enlace_pdf = enlace_tag["href"]
 
                 if enlace_pdf and nombre_archivo:
-                    ruta_adicional = os.path.normpath(os.path.join(os.path.dirname(ruta_html_secundario), enlace_pdf))
+                    ruta_adicional = os.path.normpath(os.path.join(
+                        os.path.dirname(ruta_html_secundario), enlace_pdf))
                     if os.path.exists(ruta_adicional):
                         extension = os.path.splitext(ruta_adicional)[1]
-                        nombre_limpio = re.sub(r'[/:*?"<>|\\]', '_', nombre_archivo)
+                        nombre_limpio = re.sub(
+                            r'[/:*?"<>|\\]', '_', nombre_archivo)
                         nombre_final = f"Anexo{idx+1}_{nombre_limpio}"
-                        destino_adicional = os.path.join(ruta_individual_carpeta, nombre_final)
+                        destino_adicional = os.path.join(
+                            ruta_individual_carpeta, nombre_final)
                         try:
                             shutil.copy(ruta_adicional, destino_adicional)
                             anexos_descargados += 1  # Incrementar contador de anexos
@@ -185,7 +192,8 @@ for i, row in tqdm(df.iterrows(), total=len(df), desc="📦 Procesando documento
             if len(columnas) < 2:
                 continue
             campo = columnas[0].get_text(strip=True).lower()
-            valor_raw = " ".join(columnas[1].stripped_strings).replace("\xa0", " ").strip()
+            valor_raw = " ".join(columnas[1].stripped_strings).replace(
+                "\xa0", " ").strip()
 
             if "no. de documento" in campo:
                 nombre_pdf_deseado = valor_raw.replace(" ", "")
@@ -208,12 +216,14 @@ for i, row in tqdm(df.iterrows(), total=len(df), desc="📦 Procesando documento
         total_anexos_descargados += anexos_descargados
 
         if not nombre_pdf_deseado:
-            nombre_pdf_deseado = os.path.splitext(os.path.basename(ruta_pdf))[0]
+            nombre_pdf_deseado = os.path.splitext(
+                os.path.basename(ruta_pdf))[0]
 
         nuevo_nombre_pdf = f"{nombre_pdf_deseado}.pdf"
-        ruta_pdf_destino = os.path.join(ruta_individual_carpeta, nuevo_nombre_pdf)
+        ruta_pdf_destino = os.path.join(
+            ruta_individual_carpeta, nuevo_nombre_pdf)
         shutil.copy(ruta_pdf, ruta_pdf_destino)
-        
+
         # Actualizar el log con información de anexos
         if anexos_descargados > 0:
             log_msg = f"📥 PDF Principal descargado | 📎 {anexos_descargados} anexo(s) descargado(s)"
@@ -235,7 +245,8 @@ df["Logs"] = logs_por_fila
 
 # Estadísticas finales
 documentos_con_anexos = len(df[df["Anexos"] > 0])
-print(f"📬 Elementos creados: {len(os.listdir(carpeta_destino))} de {len(filas := tabla.find('tbody').find_all('tr'))} filas encontradas en la tabla.")
+print(
+    f"📬 Elementos creados: {len(os.listdir(carpeta_destino))} de {len(filas := tabla.find('tbody').find_all('tr'))} filas encontradas en la tabla.")
 print(f"📋 Documentos con anexos: {documentos_con_anexos}")
 print(f"📎 Total de anexos descargados: {total_anexos_descargados}")
 
