@@ -19,15 +19,14 @@ def crear_carpeta_con_prefijo(base_path, nombre_base, contador):
             return carpeta_destino
         contador += 1
 
-
 # Configuración inicial
 contador_global = 1
 
 # Ruta del archivo HTML fuente
-ruta_html = r"C:\Users\deiker.aguilera\Desktop\WorkSpace\Script_SGD\298_Respaldo SGD_Clara Ordoñez_Analista\documentos\enviados.html"
+ruta_html = r"C:\Users\DEYKE\Desktop\Repositorio\298_Respaldo_SGD_Clara_Analista\documentos\recibidos.html"
 carpeta_documentos = os.path.abspath(os.path.join(
     os.path.dirname(ruta_html), "..", "documentos"))
-carpeta_destino = r"c:\Users\deiker.aguilera\Desktop\WorkSpace\Script_SGD\298_Respaldo SGD_Clara Ordoñez_Analista\Doc. Enviados"
+carpeta_destino = r"C:\Users\DEYKE\Desktop\Repositorio\298_Respaldo_SGD_Clara_Analista\Doc. Recibidos"
 
 # Preparar entorno
 os.makedirs(carpeta_destino, exist_ok=True)

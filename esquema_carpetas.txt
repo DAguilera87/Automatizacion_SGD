@@ -1,0 +1,25 @@
+tu_proyecto/
+├── .venv/
+├── .vscode/
+├── .gitignore
+├── main_enviados.py
+├── main_recibidos.py          # ✅ Ya tienes
+├── README.md                  # ✅ Ya tienes
+├── Readme.txt                 # 🤔 Podrías unificar con README.md
+├── requirements.txt           # ✅ Ya tienes
+├── config/                    # 🆕 NUEVA CARPETA
+│   └── config.json           # 🆕 Para configuraciones
+├── src/                       # 🆕 CARPETA OPCIONAL (código fuente)
+│   ├── __init__.py
+│   ├── extractor.py          # 🆕 Funciones comunes
+│   └── utils.py              # 🆕 Utilidades compartidas
+├── data/                      # 🆕 NUEVA CARPETA
+│   └── documentos/           # 🆕 Mover aquí tus HTMLs
+│       ├── recibidos.html
+│       ├── enviados.html
+│       └── (otros HTMLs individuales)
+├── output/                    # 🆕 NUEVA CARPETA
+│   ├── Doc. Recibidos/       # 🆕 Resultados organizados
+│   └── Doc. Enviados/
+└── logs/                      # 🆕 NUEVA CARPETA (opcional)
+    └── extraction_logs.log
