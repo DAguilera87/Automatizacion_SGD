@@ -50,7 +50,7 @@ def crear_pdf_hoja_recorrido(ruta_pdf, titulo, datos_recorrido):
         
         elements = []
         elements.append(Paragraph(titulo, title_style))
-        elements.append(Spacer(1, 4*mm))
+        elements.append(Spacer(1, 5*mm))
         
         if not datos_recorrido:
             elements.append(Paragraph("No se encontraron registros de recorrido.", styles['Normal']))
@@ -86,8 +86,8 @@ def crear_pdf_hoja_recorrido(ruta_pdf, titulo, datos_recorrido):
                 # Cuerpo
                 ('BACKGROUND', (0, 1), (-1, -1), colors.white),
                 ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
-                ('ALIGN', (0, 1), (-1, -1), 'CENTER'),
-                ('FONTNAME', (0, 1), (-1, -1), 'Calibri Light'),
+                ('ALIGN', (0, 1), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 1), (-1, -1), 'Calibri'),
                 ('FONTSIZE', (0, 1), (-1, -1), 8),
                 
                 # Bordes y formato
@@ -139,7 +139,6 @@ def crear_pdf_hoja_recorrido(ruta_pdf, titulo, datos_recorrido):
             return False, f"ReportLab no disponible: creado tabla TXT en {ruta_txt}"
         except Exception as e2:
             return False, f"Error creando fallback txt: {e2}"
-
 
 # Configuración inicial
 contador_global = 1
@@ -336,7 +335,7 @@ for i, row in tqdm(df.iterrows(), total=len(df), desc="📦 Procesando documento
             df.at[i, "Con Copia a"] = f"{copia_valor}"
 
         # ------------------------
-        # NUEVA PARTE: detectar Reasignar / Informar en div_datos3
+        # Detectar Reasignar / Informar en div_datos3
         # ------------------------
         div_datos3 = html_individual.find("div", {"id": "div_datos3"})
         datos_recorrido = []  # Lista de diccionarios para la tabla
