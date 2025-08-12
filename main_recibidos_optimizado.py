@@ -40,7 +40,7 @@ def crear_pdf_hoja_recorrido(ruta_pdf, titulo, datos_recorrido):
         
         styles = getSampleStyleSheet()
         title_style = ParagraphStyle('CustomTitle', parent=styles['Heading1'],
-                                fontSize=10, spaceAfter=8, alignment=TA_CENTER)
+                                fontSize=10, spaceAfter=4, alignment=TA_CENTER)
         
         elements = []
         elements.append(Paragraph(titulo, title_style))
@@ -57,58 +57,83 @@ def crear_pdf_hoja_recorrido(ruta_pdf, titulo, datos_recorrido):
                 if 'GMT' in fecha:
                     fecha = fecha.split('GMT')[0].strip()
                 
-                de_texto = registro.get('de', '')[:40] + ('...' if len(registro.get('de', '')) > 40 else '')
-                para_texto = registro.get('para', '')[:40] + ('...' if len(registro.get('para', '')) > 40 else '')
+                # Truncar textos largos
+                de_texto = registro.get('de', '')
+                if len(de_texto) > 40:
+                    de_texto = de_texto[:40] + '...'
+                
+                para_texto = registro.get('para', '')
+                if len(para_texto) > 40:
+                    para_texto = para_texto[:40] + '...'
+                
                 accion_texto = registro.get('accion', '')
                 
+                # Formatear observación con saltos de línea
                 observacion = registro.get('observacion', '')
-                if len(observacion) > 60:
-                    observacion = '\n'.join(textwrap.wrap(observacion, 60))
+                if len(observacion) > 70:
+                    observacion = '\n'.join(textwrap.wrap(observacion, 70))
                 
                 table_data.append([fecha, de_texto, para_texto, accion_texto, observacion])
             
-            # Crear y estilizar tabla
-            table = Table(table_data, colWidths=[30*mm, 47*mm, 47*mm, 47*mm, 85*mm])
+            # Crear anchos específicos y estilizar tabla
+            table = Table(table_data, colWidths=[30*mm, 47*mm, 47*mm, 47*mm, 90*mm])
+            
+            # Aplicar estilos a la tabla
             table.setStyle(TableStyle([
                 # Encabezados
                 ('BACKGROUND', (0, 0), (-1, 0), colors.lightblue),
                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
                 ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica'),
-                ('FONTSIZE', (0, 0), (-1, 0), 9),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 7),
                 
-                # Cuerpo
+                # Cuerpo de la tabla
                 ('BACKGROUND', (0, 1), (-1, -1), colors.white),
                 ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
-                ('ALIGN', (0, 1), (-1, -1), 'LEFT'),
-                ('FONTNAME', (0, 1), (-1, -1), 'Calibri'),
-                ('FONTSIZE', (0, 1), (-1, -1), 8),
+                ('ALIGN', (0, 1), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 1), (-1, -1), 6),
                 
                 # Bordes y formato
                 ('GRID', (0, 0), (-1, -1), 1, colors.black),
                 ('VALIGN', (0, 0), (-1, -1), 'TOP'),
                 ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.lightgrey]),
-                ('LEFTPADDING', (0, 0), (-1, -1), 6),
-                ('RIGHTPADDING', (0, 0), (-1, -1), 6),
-                ('TOPPADDING', (0, 0), (-1, -1), 6),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                
+                # Espaciado interno
+                ('LEFTPADDING', (0, 0), (-1, -1), 2),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 2),
+                ('TOPPADDING', (0, 0), (-1, -1), 2),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
             ]))
             
             elements.append(table)
-        
+            
+        # Construir el documento
         doc.build(elements)
-        return True, None
+        return True, f"PDF creado exitosamente: {ruta_pdf}"
+    
+    except ImportError as e:
+        # Error de importación de ReportLab
+        return crear_fallback_txt(ruta_pdf, titulo, datos_recorrido, f"ReportLab no disponible: {e}")
         
     except Exception as e:
-        # Fallback a TXT con formato tabla
+        # Cualquier otro error
+        return crear_fallback_txt(ruta_pdf, titulo, datos_recorrido, f"Error creando PDF: {e}")
+        
+def crear_fallback_txt(ruta_pdf, titulo, datos_recorrido, error_msg):
+        # Función auxiliar para crear archivo TXT como fallback con formato tabla
         try:
             ruta_txt = os.path.splitext(ruta_pdf)[0] + ".txt"
+        
             with open(ruta_txt, "w", encoding="utf-8") as fh:
-                fh.write(titulo + "\n" + "=" * len(titulo) + "\n\n")
+                fh.write(titulo + "\n")
+                fh.write("=" * len(titulo) + "\n\n")
+                fh.write(f"NOTA: {error_msg}\n\n")
                 
                 if not datos_recorrido:
                     fh.write("No se encontraron registros de recorrido.\n")
                 else:
+                    # Encabezados con formato fijo
                     fh.write(f"{'Fecha':<25} {'De':<30} {'Para':<30} {'Acción':<25} {'Observación'}\n")
                     fh.write("-" * 150 + "\n")
                     
@@ -119,8 +144,10 @@ def crear_pdf_hoja_recorrido(ruta_pdf, titulo, datos_recorrido):
                         accion_texto = registro.get('accion', '')[:23]
                         observacion = registro.get('observacion', '')
                         
+                        # Escribir línea principal
                         fh.write(f"{fecha:<25} {de_texto:<30} {para_texto:<30} {accion_texto:<25} ")
                         
+                        # Manejar observaciones largas con wrap
                         if len(observacion) > 50:
                             obs_lines = textwrap.wrap(observacion, 50)
                             fh.write(f"{obs_lines[0]}\n")
@@ -133,6 +160,18 @@ def crear_pdf_hoja_recorrido(ruta_pdf, titulo, datos_recorrido):
             return False, f"ReportLab no disponible: creado tabla TXT en {ruta_txt}"
         except Exception as e2:
             return False, f"Error creando fallback txt: {e2}"
+def verificar_reportlab():
+    try:
+        import reportlab
+        print(f"✅ ReportLab disponible - versión: {reportlab.Version}")
+        return True
+    except ImportError:
+        print("❌ ReportLab NO está instalado")
+        print("💡 Para instalar: pip install reportlab")
+        return False
+
+# Llamar la verificación al inicio
+verificar_reportlab()
 
 # Configuración inicial
 contador_global = 1
@@ -383,8 +422,8 @@ for i, row in tqdm(df.iterrows(), total=len(df), desc="📦 Procesando documento
             observaciones_concat = " - ".join(notas)
 
             # Crear Hoja Ruta en formato tabla
-            titulo_pdf = f"00_Hoja Ruta_{nro_doc_original}"
-            ruta_hoja_pdf = os.path.join(ruta_individual_carpeta, f"00_Hoja Ruta_{nro_doc_original}.pdf")
+            titulo_pdf = f"HOJA RUTA {nro_doc_original}"
+            ruta_hoja_pdf = os.path.join(ruta_individual_carpeta, f"#Hoja Ruta_{nro_doc_original}.pdf")
             ok, msg = crear_pdf_hoja_recorrido(ruta_hoja_pdf, titulo_pdf, datos_recorrido)
             if ok:
                 log_msg += " | 🗺️ Hoja Ruta (tabla) creada"
