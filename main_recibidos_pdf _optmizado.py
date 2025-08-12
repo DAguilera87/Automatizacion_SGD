@@ -23,12 +23,6 @@ def crear_carpeta_con_prefijo(base_path, nombre_base, contador):
 
 def crear_pdf_hoja_recorrido(ruta_pdf, titulo, datos_recorrido):
     """
-    Crea un PDF con formato de tabla para la Hoja de Recorrido
-    
-    Args:
-        ruta_pdf: Ruta donde se guardará el PDF
-        titulo: Título del documento
-        datos_recorrido: Lista de diccionarios con keys: fecha, de, para, accion, observacion
     """
     try:
         from reportlab.lib.pagesizes import A4, landscape
@@ -388,14 +382,14 @@ for i, row in tqdm(df.iterrows(), total=len(df), desc="📦 Procesando documento
                 notas.append("Doc. Reasignado")
             observaciones_concat = " - ".join(notas)
 
-            # Crear Hoja Recorrido en formato tabla
-            titulo_pdf = f"Hoja Recorrido - {nro_doc_original}"
-            ruta_hoja_pdf = os.path.join(ruta_individual_carpeta, "Hoja Recorrido.pdf")
+            # Crear Hoja Ruta en formato tabla
+            titulo_pdf = f"00_Hoja Ruta_{nro_doc_original}"
+            ruta_hoja_pdf = os.path.join(ruta_individual_carpeta, f"00_Hoja Ruta_{nro_doc_original}.pdf")
             ok, msg = crear_pdf_hoja_recorrido(ruta_hoja_pdf, titulo_pdf, datos_recorrido)
             if ok:
-                log_msg += " | 🗺️ Hoja Recorrido (tabla) creada"
+                log_msg += " | 🗺️ Hoja Ruta (tabla) creada"
             else:
-                log_msg += f" | ⚠️ Hoja Recorrido (fallback): {msg}"
+                log_msg += f" | ⚠️ Hoja Ruta (fallback): {msg}"
         else:
             observaciones_concat = ""
 
