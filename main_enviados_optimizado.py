@@ -10,6 +10,12 @@ from datetime import datetime
 from tqdm import tqdm
 
 
+# Ruta del archivo HTML fuente - USAR RUTAS RELATIVAS
+# Ruta del archivo HTML fuente
+ruta_html = r"C:\Users\DEYKE\Desktop\Repositorio\298_Respaldo_SGD_Clara_Analista\documentos\enviados.html"
+carpeta_documentos = os.path.abspath(os.path.join(os.path.dirname(ruta_html), "..", "documentos"))
+carpeta_destino = r"C:\Users\DEYKE\Desktop\Repositorio\298_Respaldo_SGD_Clara_Analista\Doc. Enviados"
+
 # Crear carpeta con prefijo numérico
 def crear_carpeta_con_prefijo(base_path, nombre_base, contador):
     while True:
@@ -19,7 +25,6 @@ def crear_carpeta_con_prefijo(base_path, nombre_base, contador):
             os.makedirs(carpeta_destino, exist_ok=True)
             return carpeta_destino
         contador += 1
-
 
 def crear_pdf_hoja_recorrido(ruta_pdf, titulo, datos_recorrido):
     """
@@ -175,12 +180,6 @@ verificar_reportlab()
 
 # Configuración inicial
 contador_global = 1
-
-# Ruta del archivo HTML fuente - USAR RUTAS RELATIVAS
-# Ruta del archivo HTML fuente
-ruta_html = r"C:\Users\DEYKE\Desktop\Repositorio\298_Respaldo_SGD_Clara_Analista\documentos\recibidos.html"
-carpeta_documentos = os.path.abspath(os.path.join(os.path.dirname(ruta_html), "..", "documentos"))
-carpeta_destino = r"C:\Users\DEYKE\Desktop\Repositorio\298_Respaldo_SGD_Clara_Analista\Doc. Recibidos"
 
 # Preparar entorno
 os.makedirs(carpeta_destino, exist_ok=True)
@@ -474,9 +473,9 @@ print(f"🗺️ Documentos con Hoja Recorrido: {documentos_con_observaciones}")
 
 timestamp = datetime.now().strftime("%Y-%m-%d")
 excel_path = os.path.join(
-    carpeta_destino, f"doc._recibidos_extraidos_{timestamp}.xlsx")
+    carpeta_destino, f"doc._enviados_extraidos_{timestamp}.xlsx")
 with ExcelWriter(excel_path, engine="xlsxwriter", engine_kwargs={"options": {"strings_to_urls": False}}) as writer:
-    df.to_excel(writer, index=False, sheet_name="Doc._Recibidos")
+    df.to_excel(writer, index=False, sheet_name="Doc._Enviados")
 print(f"💾 Archivo Excel generado con datos y logs integrados.")
 print("🎯 Proceso completado con éxito.")
 # Fin del script
