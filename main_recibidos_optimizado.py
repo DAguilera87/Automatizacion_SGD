@@ -11,9 +11,9 @@ from tqdm import tqdm
 
 
 # Ruta del archivo HTML fuente
-ruta_html = r"c:\Users\deiker.aguilera\Desktop\WorkSpace\Script_SGD\302_Respaldo_SGD_Deiker_Prueba\documentos\recibidos.html"
+ruta_html = r"c:\Users\deiker.aguilera\Desktop\WorkSpace\Respaldos SGD_Temporal\Respaldo 301_Narcisa Barzola_Analista_Rectorado\documentos\recibidos.html"
 carpeta_documentos = os.path.abspath(os.path.join(os.path.dirname(ruta_html), "..", "documentos"))
-carpeta_destino = r"c:\Users\deiker.aguilera\Desktop\WorkSpace\Script_SGD\302_Respaldo_SGD_Deiker_Prueba\Doc. Recibidos"
+carpeta_destino = r"c:\Users\deiker.aguilera\Desktop\WorkSpace\Respaldos SGD_Temporal\Respaldo 301_Narcisa Barzola_Analista_Rectorado\Doc. Recibidos"
 
 # Crear carpeta con prefijo numérico
 def crear_carpeta_con_prefijo(base_path, nombre_base, contador):
@@ -476,7 +476,7 @@ timestamp = datetime.now().strftime("%Y-%m-%d")
 excel_path = os.path.join(
     carpeta_destino, f"doc._recibidos_extraidos_{timestamp}.xlsx") # Nombre del archivo Excel
 with ExcelWriter(excel_path, engine="xlsxwriter", engine_kwargs={"options": {"strings_to_urls": False}}) as writer:
-    df.to_excel(writer, index=False, sheet_name="Doc._Recibidos")
+    df.to_excel(writer, index=False, sheet_name="Doc._Recibidos") # Nombre de la hoja Excel
 print(f"💾 Archivo Excel generado con datos y logs integrados.")
 print("🎯 Proceso completado con éxito.")
 # Fin del script
